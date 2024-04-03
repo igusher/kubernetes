@@ -39,6 +39,7 @@ import (
 	flowcontrolv1beta3 "k8s.io/api/flowcontrol/v1beta3"
 	networkingv1alpha1 "k8s.io/api/networking/v1alpha1"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
+	//igusherv1 "k8s.io/api/igusher/v1"
 	rbacv1beta1 "k8s.io/api/rbac/v1beta1"
 	resourcev1alpha1 "k8s.io/api/resource/v1alpha1"
 	schedulingv1 "k8s.io/api/scheduling/v1"
@@ -65,6 +66,7 @@ import (
 	"k8s.io/kubernetes/pkg/apis/networking"
 	nodeapi "k8s.io/kubernetes/pkg/apis/node"
 	"k8s.io/kubernetes/pkg/apis/policy"
+	"k8s.io/kubernetes/pkg/apis/igusher"
 	"k8s.io/kubernetes/pkg/apis/rbac"
 	"k8s.io/kubernetes/pkg/apis/resource"
 	"k8s.io/kubernetes/pkg/apis/scheduling"
@@ -88,6 +90,13 @@ const (
 // AddHandlers adds print handlers for default Kubernetes types dealing with internal versions.
 // TODO: handle errors from Handler
 func AddHandlers(h printers.PrintHandler) {
+	igusherColumnDefinitions := []metav1.TableColumnDefinition{
+		{Name: "Name", Type: "string", Format: "token", Description: metav1.ObjectMeta{}.SwaggerDoc()["name"]},
+		{Name: "Token", Type: "string", Format: "token", Description: "igusher token"},
+	}
+	h.TableHandler(igusherColumnDefinitions, printIgusher)
+	h.TableHandler(igusherColumnDefinitions, printIgusherList)
+	
 	podColumnDefinitions := []metav1.TableColumnDefinition{
 		{Name: "Name", Type: "string", Format: "name", Description: metav1.ObjectMeta{}.SwaggerDoc()["name"]},
 		{Name: "Ready", Type: "string", Description: "The aggregate readiness state of this pod for accepting traffic."},
@@ -798,6 +807,27 @@ var (
 	podSuccessConditions = []metav1.TableRowCondition{{Type: metav1.RowCompleted, Status: metav1.ConditionTrue, Reason: string(api.PodSucceeded), Message: "The pod has completed successfully."}}
 	podFailedConditions  = []metav1.TableRowCondition{{Type: metav1.RowCompleted, Status: metav1.ConditionTrue, Reason: string(api.PodFailed), Message: "The pod failed."}}
 )
+
+func printIgusherList(igusherList *igusher.IgusherList, options printers.GenerateOptions) ([]metav1.TableRow, error) {
+	rows := make([]metav1.TableRow, 0, len(igusherList.Items))
+	for i := range igusherList.Items {
+		r, err := printIgusher(&igusherList.Items[i], options)
+		if err != nil {
+			return nil, err
+		}
+		rows = append(rows, r...)
+	}
+	return rows, nil
+}
+
+func printIgusher(obj *igusher.Igusher, options printers.GenerateOptions) ([]metav1.TableRow, error) {
+	row := metav1.TableRow{
+		Object: runtime.RawExtension{Object: obj},
+	}
+
+	row.Cells = append(row.Cells, obj.Name, obj.Spec.Token)
+	return []metav1.TableRow{row}, nil
+}
 
 func printPodList(podList *api.PodList, options printers.GenerateOptions) ([]metav1.TableRow, error) {
 	rows := make([]metav1.TableRow, 0, len(podList.Items))

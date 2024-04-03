@@ -93,6 +93,7 @@ resource.k8s.io/v1alpha1 \
 extensions/v1beta1 \
 events.k8s.io/v1 \
 events.k8s.io/v1beta1 \
+igusher.k8s.io/v1 \
 imagepolicy.k8s.io/v1alpha1 \
 networking.k8s.io/v1 \
 networking.k8s.io/v1alpha1 \
