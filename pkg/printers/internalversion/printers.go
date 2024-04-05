@@ -63,10 +63,10 @@ import (
 	"k8s.io/kubernetes/pkg/apis/discovery"
 	"k8s.io/kubernetes/pkg/apis/flowcontrol"
 	apihelpers "k8s.io/kubernetes/pkg/apis/flowcontrol/util"
+	"k8s.io/kubernetes/pkg/apis/igusher"
 	"k8s.io/kubernetes/pkg/apis/networking"
 	nodeapi "k8s.io/kubernetes/pkg/apis/node"
 	"k8s.io/kubernetes/pkg/apis/policy"
-	"k8s.io/kubernetes/pkg/apis/igusher"
 	"k8s.io/kubernetes/pkg/apis/rbac"
 	"k8s.io/kubernetes/pkg/apis/resource"
 	"k8s.io/kubernetes/pkg/apis/scheduling"
@@ -96,7 +96,7 @@ func AddHandlers(h printers.PrintHandler) {
 	}
 	h.TableHandler(igusherColumnDefinitions, printIgusher)
 	h.TableHandler(igusherColumnDefinitions, printIgusherList)
-	
+
 	podColumnDefinitions := []metav1.TableColumnDefinition{
 		{Name: "Name", Type: "string", Format: "name", Description: metav1.ObjectMeta{}.SwaggerDoc()["name"]},
 		{Name: "Ready", Type: "string", Description: "The aggregate readiness state of this pod for accepting traffic."},

@@ -443,6 +443,7 @@ func NewControllerInitializers(loopMode ControllerLoopMode) map[string]InitFunc 
 	register("daemonset", startDaemonSetController)
 	register("job", startJobController)
 	register("deployment", startDeploymentController)
+	register("igusher", startIgusherController)
 	register("replicaset", startReplicaSetController)
 	register("horizontalpodautoscaling", startHPAController)
 	register("disruption", startDisruptionController)
