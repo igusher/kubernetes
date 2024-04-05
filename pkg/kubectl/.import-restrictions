@@ -61,6 +61,9 @@ rules:
       - k8s.io/kubernetes/pkg/apis/flowcontrol/install
       - k8s.io/kubernetes/pkg/apis/flowcontrol/v1alpha1
       - k8s.io/kubernetes/pkg/apis/flowcontrol/v1beta1
+      - k8s.io/kubernetes/pkg/apis/igusher
+      - k8s.io/kubernetes/pkg/apis/igusher/install
+      - k8s.io/kubernetes/pkg/apis/igusher/v1
       - k8s.io/kubernetes/pkg/apis/imagepolicy
       - k8s.io/kubernetes/pkg/apis/imagepolicy/install
       - k8s.io/kubernetes/pkg/apis/imagepolicy/v1alpha1
