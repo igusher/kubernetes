@@ -69,6 +69,7 @@ import (
 	"k8s.io/kubernetes/pkg/apis/rbac"
 	"k8s.io/kubernetes/pkg/apis/resource"
 	"k8s.io/kubernetes/pkg/apis/scheduling"
+	"k8s.io/kubernetes/pkg/apis/serverplatform"
 	"k8s.io/kubernetes/pkg/apis/storage"
 	storageutil "k8s.io/kubernetes/pkg/apis/storage/util"
 	svmv1alpha1 "k8s.io/kubernetes/pkg/apis/storagemigration"
@@ -89,6 +90,38 @@ const (
 
 // AddHandlers adds print handlers for default Kubernetes types dealing with internal versions.
 func AddHandlers(h printers.PrintHandler) {
+	serverColumnDefinitions := []metav1.TableColumnDefinition{
+		{Name: "Name", Type: "string", Format: "name", Description: metav1.ObjectMeta{}.SwaggerDoc()["name"]},
+		{Name: "BuildLabel", Type: "string", Description: "Node Build Label."},
+		{Name: "GanpatiPrefixStatus", Type: "string", Description: "ganpati prefix."},
+		{Name: "GSLBPrefix", Type: "string", Description: "GSLBprefix."},
+		{Name: "OwnerTeam", Type: "string", Description: "Team owning the node."},
+	}
+
+	// Errors are suppressed as TableHandler already logs internally
+	_ = h.TableHandler(serverColumnDefinitions, printServerList)
+	_ = h.TableHandler(serverColumnDefinitions, printServer)
+	
+	borgjobColumnDefinitions := []metav1.TableColumnDefinition{
+		{Name: "Name", Type: "string", Format: "name", Description: metav1.ObjectMeta{}.SwaggerDoc()["name"]},
+		{Name: "Environment", Type: "string", Description: "Environment."},
+		{Name: "Cell", Type: "string", Description: "Borg cell."},
+		{Name: "TaskCount", Type: "int32", Description: "Task count."},
+	}
+
+	_ = h.TableHandler(borgjobColumnDefinitions, printBorgJobList)
+	_ = h.TableHandler(borgjobColumnDefinitions, printBorgJob)
+	
+	environmentColumnDefinitions := []metav1.TableColumnDefinition{
+		{Name: "Name", Type: "string", Format: "name", Description: metav1.ObjectMeta{}.SwaggerDoc()["name"]},
+		{Name: "DataRealm", Type: "string", Description: "Data realm."},
+		{Name: "ReleaseStage", Type: "string", Description: "Release stage."},
+		{Name: "RuntimeEnvironment", Type: "string", Description: "Runtime environment."},
+	}
+
+	_ = h.TableHandler(environmentColumnDefinitions, printEnvironmentList)
+	_ = h.TableHandler(environmentColumnDefinitions, printEnvironment)
+
 	podColumnDefinitions := []metav1.TableColumnDefinition{
 		{Name: "Name", Type: "string", Format: "name", Description: metav1.ObjectMeta{}.SwaggerDoc()["name"]},
 		{Name: "Ready", Type: "string", Description: "The aggregate readiness state of this pod for accepting traffic."},
@@ -844,6 +877,66 @@ var (
 	podSuccessConditions = []metav1.TableRowCondition{{Type: metav1.RowCompleted, Status: metav1.ConditionTrue, Reason: string(api.PodSucceeded), Message: "The pod has completed successfully."}}
 	podFailedConditions  = []metav1.TableRowCondition{{Type: metav1.RowCompleted, Status: metav1.ConditionTrue, Reason: string(api.PodFailed), Message: "The pod failed."}}
 )
+
+func printServer(obj *serverplatform.Server, options printers.GenerateOptions) ([]metav1.TableRow, error) {
+	row := metav1.TableRow{
+		Object: runtime.RawExtension{Object: obj},
+	}
+	row.Cells = append(row.Cells, obj.Name, obj.Spec.BuildLabel, obj.Spec.GanpatiPrefix, obj.Spec.GSLBPrefix, obj.Spec.OwnerTeam)
+	return []metav1.TableRow{row}, nil
+}
+
+func printServerList(list *serverplatform.ServerList, options printers.GenerateOptions) ([]metav1.TableRow, error) {
+	rows := make([]metav1.TableRow, 0, len(list.Items))
+	for i := range list.Items {
+		r, err := printServer(&list.Items[i], options)
+		if err != nil {
+			return nil, err
+		}
+		rows = append(rows, r...)
+	}
+	return rows, nil
+}
+
+func printEnvironment(obj *serverplatform.Environment, options printers.GenerateOptions) ([]metav1.TableRow, error) {
+	row := metav1.TableRow{
+		Object: runtime.RawExtension{Object: obj},
+	}
+	row.Cells = append(row.Cells, obj.Name, obj.Spec.DataRealm, obj.Spec.ReleaseStage, obj.Spec.RuntimeEnvironment)
+	return []metav1.TableRow{row}, nil
+}
+
+func printEnvironmentList(list *serverplatform.EnvironmentList, options printers.GenerateOptions) ([]metav1.TableRow, error) {
+	rows := make([]metav1.TableRow, 0, len(list.Items))
+	for i := range list.Items {
+		r, err := printEnvironment(&list.Items[i], options)
+		if err != nil {
+			return nil, err
+		}
+		rows = append(rows, r...)
+	}
+	return rows, nil
+}
+
+func printBorgJob(obj *serverplatform.BorgJob, options printers.GenerateOptions) ([]metav1.TableRow, error) {
+	row := metav1.TableRow{
+		Object: runtime.RawExtension{Object: obj},
+	}
+	row.Cells = append(row.Cells, obj.Name, obj.Spec.Environment, obj.Spec.Cell, obj.Spec.TaskCount)
+	return []metav1.TableRow{row}, nil
+}
+
+func printBorgJobList(list *serverplatform.BorgJobList, options printers.GenerateOptions) ([]metav1.TableRow, error) {
+	rows := make([]metav1.TableRow, 0, len(list.Items))
+	for i := range list.Items {
+		r, err := printBorgJob(&list.Items[i], options)
+		if err != nil {
+			return nil, err
+		}
+		rows = append(rows, r...)
+	}
+	return rows, nil
+}
 
 func printPodList(podList *api.PodList, options printers.GenerateOptions) ([]metav1.TableRow, error) {
 	rows := make([]metav1.TableRow, 0, len(podList.Items))

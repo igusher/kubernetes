@@ -1,0 +1,142 @@
+/*
+Copyright 2014 The Kubernetes Authors.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+    http://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+package environment
+
+import (
+	"context"
+
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/validation/field"
+	"k8s.io/apiserver/pkg/storage/names"
+	"k8s.io/kubernetes/pkg/api/legacyscheme"
+	"k8s.io/kubernetes/pkg/apis/serverplatform"
+	"k8s.io/kubernetes/pkg/apis/serverplatform/validation"
+	"sigs.k8s.io/structured-merge-diff/v4/fieldpath"
+)
+
+// environmentStrategy implements verification logic for Environment.
+type environmentStrategy struct {
+	runtime.ObjectTyper
+	names.NameGenerator
+}
+
+// Strategy is the default logic that applies when creating and updating Environment objects.
+var Strategy = environmentStrategy{legacyscheme.Scheme, names.SimpleNameGenerator}
+
+// NamespaceScoped returns true because all Environments need to be within a namespace.
+func (environmentStrategy) NamespaceScoped() bool {
+	return true
+}
+
+// GetResetFields returns the set of fields that get reset by the strategy
+// and should not be modified by the user.
+func (environmentStrategy) GetResetFields() map[fieldpath.APIVersion]*fieldpath.Set {
+	fields := map[fieldpath.APIVersion]*fieldpath.Set{
+		"serverplatform/v1": fieldpath.NewSet(
+			fieldpath.MakePathOrDie("status"),
+		),
+	}
+
+	return fields
+}
+
+// PrepareForCreate clears the status of an Environment before creation.
+func (environmentStrategy) PrepareForCreate(ctx context.Context, obj runtime.Object) {
+	server := obj.(*serverplatform.Environment)
+	// create cannot set status
+	server.Status = serverplatform.EnvironmentStatus{}
+}
+
+// PrepareForUpdate clears fields that are not allowed to be set by end users on update.
+func (environmentStrategy) PrepareForUpdate(ctx context.Context, obj, old runtime.Object) {
+	newEnvironment := obj.(*serverplatform.Environment)
+	oldEnvironment := old.(*serverplatform.Environment)
+	// Update is not allowed to set status
+	newEnvironment.Status = oldEnvironment.Status
+}
+
+// Validate validates a new Environment.
+func (environmentStrategy) Validate(ctx context.Context, obj runtime.Object) field.ErrorList {
+	server := obj.(*serverplatform.Environment)
+	//return validation.ValidateEnvironment(server, opts)
+	return validation.ValidateEnvironment(server)
+}
+
+// WarningsOnCreate returns warnings for the creation of the given object.
+func (environmentStrategy) WarningsOnCreate(ctx context.Context, obj runtime.Object) []string {
+	return nil
+}
+
+// Canonicalize normalizes the object after validation.
+func (environmentStrategy) Canonicalize(obj runtime.Object) {
+}
+
+// AllowCreateOnUpdate is true for Environment; this means you may create one with a PUT request.
+func (environmentStrategy) AllowCreateOnUpdate() bool {
+	return false
+}
+
+// ValidateUpdate is the default update validation for an end user.
+func (environmentStrategy) ValidateUpdate(ctx context.Context, obj, old runtime.Object) field.ErrorList {
+	//return validation.ValidateEnvironment(obj.(*serverplatform.Environment), opts)
+	return validation.ValidateEnvironment(obj.(*serverplatform.Environment))
+}
+
+// WarningsOnUpdate returns warnings for the given update.
+func (environmentStrategy) WarningsOnUpdate(ctx context.Context, obj, old runtime.Object) []string {
+	return nil
+}
+
+// AllowUnconditionalUpdate is the default update policy for Environment objects. Status update should
+// only be allowed if version match.
+func (environmentStrategy) AllowUnconditionalUpdate() bool {
+	return false
+}
+
+type serverplatformStatusStrategy struct {
+	environmentStrategy
+}
+
+// StatusStrategy is the default logic invoked when updating object status.
+var StatusStrategy = serverplatformStatusStrategy{Strategy}
+
+// GetResetFields returns the set of fields that get reset by the strategy
+// and should not be modified by the user.
+func (serverplatformStatusStrategy) GetResetFields() map[fieldpath.APIVersion]*fieldpath.Set {
+	fields := map[fieldpath.APIVersion]*fieldpath.Set{
+		"serverplatform/v1": fieldpath.NewSet(
+			fieldpath.MakePathOrDie("spec"),
+		),
+	}
+
+	return fields
+}
+
+// PrepareForUpdate clears fields that are not allowed to be set by end users on update of status
+func (serverplatformStatusStrategy) PrepareForUpdate(ctx context.Context, obj, old runtime.Object) {
+	newEnvironment := obj.(*serverplatform.Environment)
+	oldEnvironment := old.(*serverplatform.Environment)
+	// status changes are not allowed to update spec
+	newEnvironment.Spec = oldEnvironment.Spec
+}
+
+// ValidateUpdate is the default update validation for an end user updating status
+func (serverplatformStatusStrategy) ValidateUpdate(ctx context.Context, obj, old runtime.Object) field.ErrorList {
+	return field.ErrorList{}
+}
+
+// WarningsOnUpdate returns warnings for the given update.
+func (serverplatformStatusStrategy) WarningsOnUpdate(ctx context.Context, obj, old runtime.Object) []string {
+	return nil
+}

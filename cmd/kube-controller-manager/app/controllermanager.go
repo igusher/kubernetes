@@ -565,6 +565,10 @@ func NewControllerDescriptors() map[string]*ControllerDescriptor {
 	register(newServiceCIDRsControllerDescriptor())
 	register(newStorageVersionMigratorControllerDescriptor())
 
+	// Server Platform
+	register(newServerControllerDescriptor())
+	register(newEnvironmentControllerDescriptor())
+
 	for _, alias := range aliases.UnsortedList() {
 		if _, ok := controllers[alias]; ok {
 			panic(fmt.Sprintf("alias %q conflicts with a controller name", alias))
