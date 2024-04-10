@@ -50,6 +50,7 @@ import (
 	rbacv1 "k8s.io/api/rbac/v1"
 	resourcev1alpha2 "k8s.io/api/resource/v1alpha2"
 	schedulingapiv1 "k8s.io/api/scheduling/v1"
+	serverplatformv1 "k8s.io/api/serverplatform/v1"
 	storageapiv1 "k8s.io/api/storage/v1"
 	storageapiv1alpha1 "k8s.io/api/storage/v1alpha1"
 	storageapiv1beta1 "k8s.io/api/storage/v1beta1"
@@ -115,6 +116,7 @@ import (
 	rbacrest "k8s.io/kubernetes/pkg/registry/rbac/rest"
 	resourcerest "k8s.io/kubernetes/pkg/registry/resource/rest"
 	schedulingrest "k8s.io/kubernetes/pkg/registry/scheduling/rest"
+	serverplatformrest "k8s.io/kubernetes/pkg/registry/serverplatform/rest"
 	storagerest "k8s.io/kubernetes/pkg/registry/storage/rest"
 	svmrest "k8s.io/kubernetes/pkg/registry/storagemigration/rest"
 )
@@ -472,6 +474,7 @@ func (c completedConfig) New(delegationTarget genericapiserver.DelegationTarget)
 		policyrest.RESTStorageProvider{},
 		rbacrest.RESTStorageProvider{Authorizer: c.GenericConfig.Authorization.Authorizer},
 		schedulingrest.RESTStorageProvider{},
+		serverplatformrest.RESTStorageProvider{},
 		storagerest.RESTStorageProvider{},
 		svmrest.RESTStorageProvider{},
 		flowcontrolrest.RESTStorageProvider{InformerFactory: c.GenericConfig.SharedInformerFactory},
@@ -752,6 +755,7 @@ var (
 		nodev1.SchemeGroupVersion,
 		policyapiv1.SchemeGroupVersion,
 		rbacv1.SchemeGroupVersion,
+		serverplatformv1.SchemeGroupVersion,
 		storageapiv1.SchemeGroupVersion,
 		schedulingapiv1.SchemeGroupVersion,
 		flowcontrolv1.SchemeGroupVersion,
